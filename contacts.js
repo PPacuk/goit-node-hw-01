@@ -1,19 +1,45 @@
-const fs = require("fs");
+const fs = require("fs").promises;
 const path = require("path");
+const colors = require("colors");
+const { nanoid } = require("nanoid");
 
 const contactsPath = path.join(__dirname, "/db", "contacts.json");
 
-// TODO: udokumentuj każdą funkcję
-
-function listContacts() {
-   return contactsPath;
+async function listContacts() {
+	const response = await fs.readFile(contactsPath);
+	return JSON.parse(response);
 }
 
-function getContactById(contactId) {}
+async function getContactById(contactId) {
+	const response = await listContacts();
+	const contactById = response.find((contact) => contact.id === contactId);
+	return contactById;
+}
 
-function removeContact(contactId) {}
+async function removeContact(contactId) {
+	const response = await listContacts();
+	const contactIndex = response.map((e) => e.id).indexOf(contactId);
+	const updatedList = response.filter((e) => e.id !== `${contactId}`);
+	if (contactIndex === -1) {
+		console.log("Contact not found!".red);
+	} else {
+		await fs.writeFile(contactsPath, JSON.stringify(updatedList, null, 2));
+		return updatedList;
+	}
+}
 
-function addContact(name, email, phone) {}
+async function addContact(name, email, phone) {
+	const response = await listContacts();
+	const contact = {
+		id: nanoid(),
+		name,
+		email,
+		phone,
+	};
+	response.push(contact);
+	await fs.writeFile(contactsPath, JSON.stringify(response, null, 2));
+	return response;
+}
 
 module.exports = {
 	listContacts,
